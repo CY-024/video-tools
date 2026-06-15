@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import {
   AudioLines,
   BadgeCheck,
@@ -82,6 +82,42 @@ const editTimelineClips = [
   '14_回忆', '13_空镜', '12_逃离', '11_回头', '10_推理', '09_真相',
   '08_反转', '07_收束', '06_金句', '05_字幕', '04_尾帧',
 ]
+
+const importKindMeta = {
+  video: { label: '视频轨', icon: Film, color: '#42c7ff', rowClass: 'videoTrack' },
+  audio: { label: '音频轨', icon: AudioLines, color: '#ffc75f', rowClass: 'audioTrack' },
+  subtitle: { label: '字幕轨', icon: Captions, color: '#f38cff', rowClass: 'subtitleTrack' },
+}
+
+const demoImportFiles = [
+  { name: 'movie_opening.mp4', size: 148 * 1024 * 1024, type: 'video/mp4' },
+  { name: 'voice_over.wav', size: 21 * 1024 * 1024, type: 'audio/wav' },
+  { name: 'movie_opening.zh.srt', size: 18 * 1024, type: 'application/x-subrip' },
+]
+
+function detectImportKind(file) {
+  const extension = file.name.split('.').pop()?.toLowerCase()
+
+  if (file.type.startsWith('video/') || ['mp4', 'mov', 'mkv', 'webm'].includes(extension)) {
+    return 'video'
+  }
+
+  if (file.type.startsWith('audio/') || ['mp3', 'wav', 'aac', 'm4a', 'flac'].includes(extension)) {
+    return 'audio'
+  }
+
+  if (extension === 'srt') {
+    return 'subtitle'
+  }
+
+  return 'video'
+}
+
+function formatFileSize(size) {
+  if (!size) return '已识别'
+  if (size > 1024 * 1024) return `${Math.round(size / 1024 / 1024)}MB`
+  return `${Math.max(1, Math.round(size / 1024))}KB`
+}
 
 function App() {
   const [active, setActive] = useState('learn')
@@ -388,6 +424,39 @@ function MatchView() {
 }
 
 function EditView() {
+  const importInputRef = useRef(null)
+  const [importedAssets, setImportedAssets] = useState([])
+
+  const importSummary = importedAssets.length
+    ? `已生成 ${new Set(importedAssets.map((asset) => asset.kind)).size} 类轨道`
+    : '等待导入视频、音频或 SRT'
+
+  const timelineTracks = useMemo(() => {
+    return ['video', 'audio', 'subtitle']
+      .map((kind) => ({
+        kind,
+        ...importKindMeta[kind],
+        assets: importedAssets.filter((asset) => asset.kind === kind),
+      }))
+      .filter((track) => track.assets.length > 0)
+  }, [importedAssets])
+
+  const addImportedFiles = (files) => {
+    const nextAssets = Array.from(files).map((file, index) => {
+      const kind = detectImportKind(file)
+      return {
+        id: `${file.name}-${file.size}-${Date.now()}-${index}`,
+        name: file.name,
+        kind,
+        size: formatFileSize(file.size),
+      }
+    })
+
+    if (nextAssets.length) {
+      setImportedAssets((current) => [...nextAssets, ...current])
+    }
+  }
+
   return (
     <div className="capcutBench">
       <section className="capcutTop">
@@ -404,12 +473,51 @@ function EditView() {
                 <span>搜索文件名称、画面元素、台词</span>
               </div>
               <div className="mediaToolbar">
-                <button><Plus size={15} />导入</button>
+                <button onClick={() => importInputRef.current?.click()}><Plus size={15} />导入</button>
+                <input
+                  ref={importInputRef}
+                  className="hiddenFileInput"
+                  type="file"
+                  multiple
+                  accept="video/*,audio/*,.srt"
+                  onChange={(event) => {
+                    addImportedFiles(event.target.files)
+                    event.target.value = ''
+                  }}
+                />
+                <button onClick={() => addImportedFiles(demoImportFiles)}>示例导入</button>
                 <button>排序</button>
                 <button>全部</button>
               </div>
-              <span className="libraryLabel">全部</span>
+              <span className="libraryLabel">{importSummary}</span>
+              {importedAssets.length > 0 && (
+                <div className="importStatus" aria-label="导入结果">
+                  {['video', 'audio', 'subtitle'].map((kind) => {
+                    const meta = importKindMeta[kind]
+                    const Icon = meta.icon
+                    const count = importedAssets.filter((asset) => asset.kind === kind).length
+
+                    return (
+                      <span key={kind} style={{ '--status-color': meta.color }}>
+                        <Icon size={13} />{meta.label} {count}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
               <div className="clipGrid">
+                {importedAssets.map((asset) => {
+                  const meta = importKindMeta[asset.kind]
+                  return (
+                    <div className="clipCard" key={asset.id}>
+                      <div className={`clipThumb assetThumb ${asset.kind}`} style={{ '--clip-tone': meta.color }}>
+                        <span>{meta.label}</span>
+                        <em>{asset.size}</em>
+                      </div>
+                      <strong>{asset.name}</strong>
+                    </div>
+                  )
+                })}
                 {mediaClips.map((clip, index) => (
                   <div className="clipCard" key={clip.name}>
                     <div className="clipThumb" style={{ '--clip-tone': clip.tone }}>
@@ -522,6 +630,9 @@ function EditView() {
           <div className="trackLabels">
             <span>封面</span>
             <span>主视频</span>
+            {timelineTracks.map((track) => (
+              <span key={track.kind}>{track.label}</span>
+            ))}
           </div>
           <div className="capcutTracks">
             <div className="coverTrack">
@@ -539,6 +650,24 @@ function EditView() {
                 </div>
               ))}
             </div>
+            {timelineTracks.map((track) => (
+              <div className={`generatedTrack ${track.rowClass}`} key={track.kind}>
+                {track.assets.map((asset, index) => (
+                  <div
+                    className="generatedClip"
+                    key={asset.id}
+                    style={{
+                      '--track-color': track.color,
+                      width: `${Math.min(280, 118 + asset.name.length * 5)}px`,
+                      marginLeft: index === 0 ? '0' : '8px',
+                    }}
+                  >
+                    <span>{asset.name}</span>
+                    <em>{track.label}</em>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </section>
