@@ -65,6 +65,24 @@ const trackData = [
   { name: 'AI 配音轨', color: '#b9a7ff', blocks: ['磁性男声', '停顿优化', '情绪增强'] },
 ]
 
+const mediaClips = [
+  { name: '剧情开场.mp4', duration: '00:12', tone: '#8fd8ff' },
+  { name: '走廊压迫感.mp4', duration: '00:10', tone: '#79d083' },
+  { name: '人物回头.mp4', duration: '00:08', tone: '#f06f5f' },
+  { name: '房间全景.mp4', duration: '00:12', tone: '#b08cff' },
+  { name: '监控画面.mp4', duration: '00:10', tone: '#65b7ff' },
+  { name: '道具细节.mp4', duration: '00:09', tone: '#f3bd54' },
+  { name: '追逐片段.mp4', duration: '00:13', tone: '#54d4c5' },
+  { name: '结尾反转.mp4', duration: '00:11', tone: '#e978b9' },
+]
+
+const editTimelineClips = [
+  '26_开场', '25_回廊', '24_灯光', '23_背影', '22_道具', '21_特写',
+  '20_推门', '19_追逐', '18_监控', '17_反应', '16_线索', '15_争执',
+  '14_回忆', '13_空镜', '12_逃离', '11_回头', '10_推理', '09_真相',
+  '08_反转', '07_收束', '06_金句', '05_字幕', '04_尾帧',
+]
+
 function App() {
   const [active, setActive] = useState('learn')
   const [selectedVideo, setSelectedVideo] = useState(hotVideos[0])
@@ -74,7 +92,7 @@ function App() {
   const [voice, setVoice] = useState('电影感男声')
 
   const activeModule = useMemo(() => modules.find((item) => item.id === active), [active])
-  const showTimeline = active === 'match' || active === 'edit'
+  const showTimeline = active === 'match'
 
   const runLearning = () => {
     setLearnState('学习中')
@@ -369,47 +387,159 @@ function MatchView() {
   )
 }
 
-function EditView({ subtitleSize, setSubtitleSize, voice, setVoice }) {
+function EditView() {
   return (
-    <div className="grid editGrid">
-      <section className="panel span2">
-        <PanelTitle icon={Clapperboard} title="播放器" action="00:42 / 01:30" />
-        <div className="editorCanvas">
-          <div className="playDisc"><Play fill="currentColor" size={30} /></div>
-          <div className="subtitleOverlay" style={{ fontSize: `${subtitleSize}px` }}>
-            真正的反转，从这一秒才开始
+    <div className="capcutBench">
+      <section className="capcutTop">
+        <aside className="mediaPanel">
+          <div className="mediaTabs">
+            <button className="active"><Film size={18} />媒体</button>
+            <button><AudioLines size={18} />音频</button>
+            <button><Captions size={18} />文本</button>
+          </div>
+          <div className="mediaBody">
+            <div className="mediaLibrary">
+              <div className="mediaSearch">
+                <Search size={15} />
+                <span>搜索文件名称、画面元素、台词</span>
+              </div>
+              <div className="mediaToolbar">
+                <button><Plus size={15} />导入</button>
+                <button>排序</button>
+                <button>全部</button>
+              </div>
+              <span className="libraryLabel">全部</span>
+              <div className="clipGrid">
+                {mediaClips.map((clip, index) => (
+                  <div className="clipCard" key={clip.name}>
+                    <div className="clipThumb" style={{ '--clip-tone': clip.tone }}>
+                      <span>已添加</span>
+                      <em>{clip.duration}</em>
+                    </div>
+                    <strong>{String(index + 1).padStart(2, '0')}_{clip.name}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <section className="playerPanel">
+          <div className="capcutPanelHeader">
+            <strong>播放器</strong>
+            <button><Settings2 size={16} /></button>
+          </div>
+          <div className="capcutViewer">
+            <div className="viewerFrame">
+              <div className="sceneLayer sceneBack"></div>
+              <div className="sceneLayer sceneSubject"></div>
+              <span className="viewerCaption">真正的反转，从这一秒才开始</span>
+            </div>
+          </div>
+          <div className="playerControls">
+            <span><b>00:00:00:00</b> / 00:04:31:00</span>
+            <button><Play fill="currentColor" size={18} /></button>
+            <div>
+              <button>比例</button>
+              <button>全屏</button>
+            </div>
+          </div>
+        </section>
+
+        <aside className="adjustPanel">
+          <div className="capcutPanelHeader">
+            <strong>画面与字幕</strong>
+          </div>
+          <div className="adjustBody">
+            <div className="adjustGroup">
+              <div className="adjustTitle">
+                <span>视频画面</span>
+                <em>已选主视频</em>
+              </div>
+              {[
+                ['位置 X', '0'],
+                ['位置 Y', '-12'],
+                ['缩放', '112%'],
+                ['旋转', '0°'],
+              ].map(([label, value]) => (
+                <label className="adjustRow" key={label}>
+                  <span>{label}</span>
+                  <input type="range" min="0" max="100" defaultValue={label === '缩放' ? 62 : 50} />
+                  <strong>{value}</strong>
+                </label>
+              ))}
+            </div>
+
+            <div className="adjustGroup">
+              <div className="adjustTitle">
+                <span>字幕样式</span>
+                <em>SRT 字幕层</em>
+              </div>
+              {[
+                ['字体大小', '42px'],
+                ['字幕 X', '0'],
+                ['字幕 Y', '78%'],
+                ['描边强度', '6'],
+              ].map(([label, value]) => (
+                <label className="adjustRow" key={label}>
+                  <span>{label}</span>
+                  <input type="range" min="0" max="100" defaultValue={label === '字幕 Y' ? 78 : 48} />
+                  <strong>{value}</strong>
+                </label>
+              ))}
+              <div className="fontControls">
+                <button className="active">粗体</button>
+                <button>阴影</button>
+                <button>居中</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section className="capcutTimeline">
+        <div className="timelineToolBar">
+          <div>
+            {['选择', '撤销', '重做', '分割', '删除', '保护', '截图'].map((tool) => (
+              <button key={tool}>{tool}</button>
+            ))}
+          </div>
+          <div>
+            {['录音', '吸附', '联动', '缩放 -', '缩放 +'].map((tool) => (
+              <button key={tool}>{tool}</button>
+            ))}
           </div>
         </div>
-      </section>
-      <section className="panel">
-        <PanelTitle icon={Settings2} title="字幕参数" action="已选字幕层" />
-        <div className="controlStack">
-          <label>字号 <strong>{subtitleSize}px</strong></label>
-          <input type="range" min="28" max="58" value={subtitleSize} onChange={(event) => setSubtitleSize(event.target.value)} />
-          <label>位置</label>
-          <div className="segmented">
-            <button>上</button><button className="active">中下</button><button>底部</button>
+        <div className="timeRuler">
+          {['00:00', '01:00', '02:00', '03:00', '04:00', '05:00'].map((time) => (
+            <span key={time}>{time}</span>
+          ))}
+        </div>
+        <div className="timelineStage">
+          <div className="playhead">
+            <span></span>
           </div>
-          <button><Subtitles size={16} />导入 SRT</button>
-        </div>
-      </section>
-      <section className="panel">
-        <PanelTitle icon={Mic2} title="AI 配音" action="可预听" />
-        <div className="controlStack">
-          <label>音色</label>
-          <select value={voice} onChange={(event) => setVoice(event.target.value)}>
-            <option>电影感男声</option>
-            <option>悬疑女声</option>
-            <option>纪录片旁白</option>
-          </select>
-          <button className="primary"><AudioLines size={16} />生成配音</button>
-          <span className="hint">当前：{voice}</span>
-        </div>
-      </section>
-      <section className="panel span2">
-        <PanelTitle icon={Scissors} title="剪辑工具" action="磁吸开启" />
-        <div className="toolGrid">
-          {['分割', '删除', '变速', '转场', '降噪', '关键帧'].map((item) => <button key={item}>{item}</button>)}
+          <div className="trackLabels">
+            <span>封面</span>
+            <span>主视频</span>
+          </div>
+          <div className="capcutTracks">
+            <div className="coverTrack">
+              <strong>封面</strong>
+            </div>
+            <div className="mainClipTrack">
+              {editTimelineClips.map((clip, index) => (
+                <div
+                  className="timelineClip"
+                  key={clip}
+                  style={{ '--clip-index': index }}
+                >
+                  <span>{clip}</span>
+                  <em></em>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>

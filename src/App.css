@@ -522,6 +522,503 @@ textarea {
   font-weight: 800;
 }
 
+.capcutBench {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(360px, 1fr) 330px;
+  gap: 8px;
+  color: #d7dbe3;
+}
+
+.capcutTop {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 30% 47% 23%;
+  gap: 8px;
+}
+
+.mediaPanel,
+.playerPanel,
+.adjustPanel,
+.capcutTimeline {
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: #15171b;
+  overflow: hidden;
+}
+
+.mediaPanel {
+  display: grid;
+  grid-template-rows: 58px 1fr;
+}
+
+.mediaTabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #202228;
+}
+
+.mediaTabs button {
+  min-height: 58px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #aeb4c0;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+}
+
+.mediaTabs button.active {
+  color: #16d5e9;
+}
+
+.mediaBody {
+  min-height: 0;
+  display: grid;
+}
+
+.mediaLibrary {
+  min-height: 0;
+  padding: 14px;
+  display: grid;
+  grid-template-rows: 38px 38px 22px 1fr;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.mediaSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #090a0d;
+  color: #7f8794;
+}
+
+.mediaToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mediaToolbar button {
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.libraryLabel {
+  color: #d8dde7;
+  font-size: 13px;
+}
+
+.clipGrid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(92px, 1fr));
+  gap: 13px;
+  overflow: hidden;
+}
+
+.clipCard {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.clipThumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 5px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--clip-tone), #111 14%), #17212b 58%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.12) 0 5px, transparent 5px 14px);
+}
+
+.clipThumb::after {
+  content: "";
+  position: absolute;
+  inset: 36% 12% 13%;
+  border-radius: 999px 999px 16px 16px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.clipThumb span,
+.clipThumb em {
+  position: absolute;
+  top: 5px;
+  z-index: 1;
+  font-style: normal;
+  font-size: 11px;
+  color: #fff;
+  text-shadow: 0 1px 5px #000;
+}
+
+.clipThumb span {
+  left: 6px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.clipThumb em {
+  right: 6px;
+}
+
+.clipCard strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8f98a7;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.playerPanel,
+.adjustPanel {
+  display: grid;
+  grid-template-rows: 46px 1fr auto;
+}
+
+.capcutPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background: #24262c;
+  color: #d6dbe5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.capcutPanelHeader button {
+  border: 0;
+  background: transparent;
+  color: #7f8794;
+  padding: 0;
+  min-height: 30px;
+}
+
+.capcutViewer {
+  display: grid;
+  place-items: center;
+  padding: 16px 22px 10px;
+  background: #111315;
+}
+
+.viewerFrame {
+  position: relative;
+  width: min(95%, 860px);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #252f22;
+  box-shadow: 0 0 0 1px #30343a;
+}
+
+.sceneLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.sceneBack {
+  background:
+    radial-gradient(circle at 72% 20%, rgba(255, 234, 143, 0.9), transparent 22%),
+    linear-gradient(145deg, #d2d979 0 36%, #71a463 36% 54%, #b7d1a5 54% 100%);
+}
+
+.sceneSubject {
+  left: 18%;
+  top: 18%;
+  width: 62%;
+  height: 82%;
+  border-radius: 48% 52% 32% 38%;
+  background:
+    radial-gradient(circle at 64% 25%, #f25a40 0 9%, transparent 10%),
+    linear-gradient(135deg, transparent 0 23%, #f2f2ee 23% 34%, #e64d3c 34% 52%, #f8f8f2 52% 65%, transparent 65%);
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.35));
+}
+
+.viewerCaption {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.9);
+}
+
+.playerControls {
+  display: grid;
+  grid-template-columns: 1fr 64px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px 14px;
+  background: #111315;
+}
+
+.playerControls b {
+  color: #11d2e8;
+}
+
+.playerControls > button {
+  justify-self: center;
+  border: 0;
+  background: transparent;
+}
+
+.playerControls > div {
+  justify-self: end;
+  display: flex;
+  gap: 8px;
+}
+
+.adjustBody {
+  min-height: 0;
+  padding: 16px;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  background: #15171b;
+}
+
+.adjustGroup {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.adjustGroup:last-child {
+  border-bottom: 0;
+}
+
+.adjustTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.adjustTitle span {
+  color: #f2f5fb;
+  font-weight: 700;
+}
+
+.adjustTitle em {
+  font-style: normal;
+  color: #7f8998;
+  font-size: 12px;
+}
+
+.adjustRow {
+  display: grid;
+  grid-template-columns: 68px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+  color: #aeb7c5;
+  font-size: 13px;
+}
+
+.adjustRow input {
+  height: 4px;
+  padding: 0;
+  accent-color: #15d4e9;
+}
+
+.adjustRow strong {
+  justify-self: end;
+  color: #dbe3ee;
+  font-size: 12px;
+}
+
+.fontControls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.fontControls button {
+  min-height: 32px;
+  padding: 0 8px;
+}
+
+.fontControls button.active {
+  color: #061018;
+  background: #16d5e9;
+  border-color: #16d5e9;
+}
+
+.capcutTimeline {
+  display: grid;
+  grid-template-rows: 42px 32px 1fr;
+  background: #101113;
+}
+
+.timelineToolBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: #25272d;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.timelineToolBar div {
+  display: flex;
+  gap: 6px;
+}
+
+.timelineToolBar button {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: #b7beca;
+}
+
+.timelineToolBar button:hover {
+  background: #30343c;
+}
+
+.timeRuler {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  padding-left: 156px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 63px, rgba(255, 255, 255, 0.09) 63px 64px),
+    #141517;
+  color: #737b88;
+  font-size: 12px;
+}
+
+.timeRuler span {
+  align-self: center;
+}
+
+.timelineStage {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  background: #151617;
+  overflow: hidden;
+}
+
+.playhead {
+  position: absolute;
+  top: -31px;
+  bottom: 0;
+  left: 188px;
+  width: 2px;
+  background: #f2f5fb;
+  z-index: 3;
+}
+
+.playhead span {
+  position: absolute;
+  top: -7px;
+  left: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #f2f5fb;
+}
+
+.trackLabels {
+  padding: 62px 12px 0;
+  display: grid;
+  grid-template-rows: 52px 70px;
+  gap: 10px;
+  color: #d4d9e2;
+  background: #191a1d;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trackLabels span {
+  align-self: center;
+  justify-self: end;
+  padding: 7px 10px;
+  border-radius: 5px;
+  background: #2a2d33;
+}
+
+.capcutTracks {
+  position: relative;
+  padding: 62px 18px 0;
+  background:
+    linear-gradient(transparent 0 48px, rgba(255, 255, 255, 0.03) 48px 49px, transparent 49px 128px),
+    #141516;
+}
+
+.coverTrack {
+  height: 52px;
+  width: 70px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: #272b31;
+  color: #d9dde6;
+  margin-bottom: 10px;
+}
+
+.mainClipTrack {
+  display: flex;
+  height: 70px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.timelineClip {
+  position: relative;
+  flex: 0 0 72px;
+  height: 70px;
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
+  background:
+    linear-gradient(135deg, hsl(calc(var(--clip-index) * 17 + 178), 62%, 45%), hsl(calc(var(--clip-index) * 19 + 198), 72%, 31%));
+  overflow: hidden;
+}
+
+.timelineClip::before {
+  content: "";
+  position: absolute;
+  inset: 10px 8px 18px;
+  border-radius: 999px 999px 10px 10px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.timelineClip span {
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  right: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e8fbff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.timelineClip em {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 14px;
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.36) 0 2px, rgba(255, 255, 255, 0.2) 2px 3px, transparent 3px 6px);
+}
+
 .controlStack label {
   color: #c7d1df;
 }
