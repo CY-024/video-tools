@@ -1,6 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
-  AudioLines,
   BadgeCheck,
   BrainCircuit,
   Captions,
@@ -11,44 +10,27 @@ import {
   FolderUp,
   Gauge,
   Link,
-  Mic2,
   MousePointer2,
   Play,
-  Plus,
   Scissors,
   Search,
   Send,
-  Settings2,
   Sparkles,
   Subtitles,
   Wand2,
 } from 'lucide-react'
 
 const modules = [
-  { id: 'learn', name: '爆款文案学习', icon: BrainCircuit, status: '学习库 128 条' },
-  { id: 'write', name: '文案生成', icon: Wand2, status: 'GPT 相似创作' },
+  { id: 'learn', name: '爆款文案学习', icon: BrainCircuit, status: '结构学习库' },
+  { id: 'write', name: '文案生成', icon: Wand2, status: '参考爆款逻辑' },
   { id: 'match', name: '智能匹配剪辑', icon: Scissors, status: 'A/B-roll 匹配' },
   { id: 'edit', name: '剪辑工作台', icon: Clapperboard, status: '字幕与配音' },
 ]
 
-const hotVideos = [
-  { title: '三分钟讲透冷门悬疑片反转', platform: '抖音', heat: '96.8w', hook: '开头 5 秒制造强冲突' },
-  { title: '废土求生电影高能解说', platform: 'B站', heat: '72.4w', hook: '悬念问题贯穿全片' },
-  { title: '真实案件改编电影拆解', platform: '小红书', heat: '48.9w', hook: '情绪递进非常稳定' },
-]
+const demoScript =
+  '如果你只看了开头，绝对猜不到这个男人接下来会主动走进危险。所有人都以为他是在逃命，可镜头一转，他其实早就知道出口在哪里。真正可怕的不是房间里的机关，而是他每一次选择都在把观众带进误区。等真相出现时，你才发现前面所有看似无用的细节，都是导演提前埋下的答案。你觉得他最后赢了吗？还是从一开始，他就被困在别人写好的剧本里？'
 
-const referenceScripts = [
-  '如果你只看了开头，绝对猜不到这个男人接下来会做什么。',
-  '这部电影最狠的地方，不是反转，而是它把观众也变成了帮凶。',
-  '当所有人都以为真相出现时，镜头却悄悄给出了另一个答案。',
-]
-
-const generatedParagraphs = [
-  '开场先抛出一个结果级悬念：主角明明已经逃出房间，却在十分钟后主动回到了危险中心。',
-  '随后用三段画面快速建立人物关系，让观众知道他不是冲动，而是在用自己做诱饵。',
-  '中段切入连续反转，把原本普通的追逃戏，升级成一场关于身份与记忆的心理博弈。',
-  '结尾保留一句可二创的金句，让观众在评论区讨论：真正被困住的，到底是主角，还是看完故事的我们。',
-]
+const apiBase = 'http://127.0.0.1:8787'
 
 const matchRows = [
   { time: '00:00-00:08', script: '先用一句强悬念抓住观众', a: '旁白铺垫', b: '主角背影+门缝光影' },
@@ -57,87 +39,43 @@ const matchRows = [
   { time: '00:39-00:58', script: '承接上文进入高能段', a: '关键推理', b: '追逐+道具细节' },
 ]
 
-const trackData = [
-  { name: '原视频轨', color: '#53c7ff', blocks: ['导入片段 01', '导入片段 02', '转场补帧'] },
-  { name: 'A-roll 解说轨', color: '#ffcc66', blocks: ['开场钩子', '剧情推进', '结尾金句'] },
-  { name: 'B-roll 衔接轨', color: '#7cf29a', blocks: ['人物特写', '环境空镜', '高能动作', '细节回放'] },
-  { name: '字幕轨', color: '#f48cff', blocks: ['SRT 01', 'SRT 02', '强调字幕'] },
-  { name: 'AI 配音轨', color: '#b9a7ff', blocks: ['磁性男声', '停顿优化', '情绪增强'] },
-]
+async function apiPost(path, body) {
+  const response = await fetch(`${apiBase}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const payload = await response.json().catch(() => ({}))
 
-const mediaClips = [
-  { name: '剧情开场.mp4', duration: '00:12', tone: '#8fd8ff' },
-  { name: '走廊压迫感.mp4', duration: '00:10', tone: '#79d083' },
-  { name: '人物回头.mp4', duration: '00:08', tone: '#f06f5f' },
-  { name: '房间全景.mp4', duration: '00:12', tone: '#b08cff' },
-  { name: '监控画面.mp4', duration: '00:10', tone: '#65b7ff' },
-  { name: '道具细节.mp4', duration: '00:09', tone: '#f3bd54' },
-  { name: '追逐片段.mp4', duration: '00:13', tone: '#54d4c5' },
-  { name: '结尾反转.mp4', duration: '00:11', tone: '#e978b9' },
-]
-
-const editTimelineClips = [
-  '26_开场', '25_回廊', '24_灯光', '23_背影', '22_道具', '21_特写',
-  '20_推门', '19_追逐', '18_监控', '17_反应', '16_线索', '15_争执',
-  '14_回忆', '13_空镜', '12_逃离', '11_回头', '10_推理', '09_真相',
-  '08_反转', '07_收束', '06_金句', '05_字幕', '04_尾帧',
-]
-
-const importKindMeta = {
-  video: { label: '视频轨', icon: Film, color: '#42c7ff', rowClass: 'videoTrack' },
-  audio: { label: '音频轨', icon: AudioLines, color: '#ffc75f', rowClass: 'audioTrack' },
-  subtitle: { label: '字幕轨', icon: Captions, color: '#f38cff', rowClass: 'subtitleTrack' },
-}
-
-const demoImportFiles = [
-  { name: 'movie_opening.mp4', size: 148 * 1024 * 1024, type: 'video/mp4' },
-  { name: 'voice_over.wav', size: 21 * 1024 * 1024, type: 'audio/wav' },
-  { name: 'movie_opening.zh.srt', size: 18 * 1024, type: 'application/x-subrip' },
-]
-
-function detectImportKind(file) {
-  const extension = file.name.split('.').pop()?.toLowerCase()
-
-  if (file.type.startsWith('video/') || ['mp4', 'mov', 'mkv', 'webm'].includes(extension)) {
-    return 'video'
+  if (!response.ok) {
+    throw new Error(payload.message || '接口请求失败')
   }
 
-  if (file.type.startsWith('audio/') || ['mp3', 'wav', 'aac', 'm4a', 'flac'].includes(extension)) {
-    return 'audio'
-  }
-
-  if (extension === 'srt') {
-    return 'subtitle'
-  }
-
-  return 'video'
-}
-
-function formatFileSize(size) {
-  if (!size) return '已识别'
-  if (size > 1024 * 1024) return `${Math.round(size / 1024 / 1024)}MB`
-  return `${Math.max(1, Math.round(size / 1024))}KB`
+  return payload
 }
 
 function App() {
   const [active, setActive] = useState('learn')
-  const [selectedVideo, setSelectedVideo] = useState(hotVideos[0])
-  const [learnState, setLearnState] = useState('待提取')
-  const [draftState, setDraftState] = useState('未生成')
-  const [subtitleSize, setSubtitleSize] = useState(42)
-  const [voice, setVoice] = useState('电影感男声')
+  const [records, setRecords] = useState([])
+  const [activeRecord, setActiveRecord] = useState(null)
+  const [globalStatus, setGlobalStatus] = useState('等待学习爆款文案')
 
   const activeModule = useMemo(() => modules.find((item) => item.id === active), [active])
   const showTimeline = active === 'match'
 
-  const runLearning = () => {
-    setLearnState('学习中')
-    window.setTimeout(() => setLearnState('已学习 12 个爆款结构'), 700)
-  }
+  useEffect(() => {
+    fetch(`${apiBase}/api/learn/records`)
+      .then((response) => response.json())
+      .then((payload) => {
+        setRecords(payload.records || [])
+        setActiveRecord(payload.records?.[0] || null)
+      })
+      .catch(() => setGlobalStatus('后端还没启动，请运行 npm run dev'))
+  }, [])
 
-  const generateDraft = () => {
-    setDraftState('生成中')
-    window.setTimeout(() => setDraftState('已生成，可加入字幕草稿'), 700)
+  const addRecord = (record) => {
+    setRecords((current) => [record, ...current.filter((item) => item.id !== record.id)])
+    setActiveRecord(record)
   }
 
   return (
@@ -172,8 +110,8 @@ function App() {
         <div className="sideStatus">
           <Gauge size={18} />
           <div>
-            <strong>项目健康度 92%</strong>
-            <span>文案节奏、画面匹配、字幕可读性良好</span>
+            <strong>学习库 {records.length} 条</strong>
+            <span>{globalStatus}</span>
           </div>
         </div>
       </aside>
@@ -194,24 +132,18 @@ function App() {
         <section className={`content ${showTimeline ? 'withTimeline' : ''}`}>
           {active === 'learn' && (
             <LearningView
-              selectedVideo={selectedVideo}
-              setSelectedVideo={setSelectedVideo}
-              learnState={learnState}
-              runLearning={runLearning}
+              records={records}
+              activeRecord={activeRecord}
+              setActiveRecord={setActiveRecord}
+              addRecord={addRecord}
+              setGlobalStatus={setGlobalStatus}
             />
           )}
           {active === 'write' && (
-            <WritingView draftState={draftState} generateDraft={generateDraft} />
+            <WritingView records={records} setGlobalStatus={setGlobalStatus} />
           )}
           {active === 'match' && <MatchView />}
-          {active === 'edit' && (
-            <EditView
-              subtitleSize={subtitleSize}
-              setSubtitleSize={setSubtitleSize}
-              voice={voice}
-              setVoice={setVoice}
-            />
-          )}
+          {active === 'edit' && <EditView />}
         </section>
 
         {showTimeline && <Timeline />}
@@ -220,166 +152,286 @@ function App() {
   )
 }
 
-function LearningView({ selectedVideo, setSelectedVideo, learnState, runLearning }) {
+function LearningView({ records, activeRecord, setActiveRecord, addRecord, setGlobalStatus }) {
+  const [mode, setMode] = useState('text')
+  const [title, setTitle] = useState('悬疑反转电影解说样本')
+  const [platform, setPlatform] = useState('手动粘贴')
+  const [scriptText, setScriptText] = useState(demoScript)
+  const [url, setUrl] = useState('https://www.bilibili.com')
+  const [status, setStatus] = useState('粘贴爆款文案，或输入网页链接开始学习')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const analyzeText = async () => {
+    setIsLoading(true)
+    setStatus('正在让模型拆解爆款逻辑')
+    setGlobalStatus('正在让模型拆解爆款逻辑')
+
+    try {
+      const payload = await apiPost('/api/learn/analyze-text', {
+        title,
+        platform,
+        text: scriptText,
+      })
+      addRecord(payload.record)
+      setStatus('已保存到学习库')
+      setGlobalStatus('已保存到学习库')
+    } catch (error) {
+      setStatus(error.message)
+      setGlobalStatus(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const analyzeUrl = async () => {
+    setIsLoading(true)
+    setStatus('正在读取网页')
+    setGlobalStatus('正在读取网页')
+
+    try {
+      const payload = await apiPost('/api/learn/analyze-url', { url })
+      addRecord(payload.record)
+      setStatus('已保存到学习库')
+      setGlobalStatus('已保存到学习库')
+    } catch (error) {
+      const message = error.message.includes('文本太少') ? '链接内容读取失败，请改用粘贴文案' : error.message
+      setStatus(message)
+      setGlobalStatus(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const analyzeVideoUrl = async () => {
+    setIsLoading(true)
+    setStatus('正在提取视频里的解说文案')
+    setGlobalStatus('正在提取视频里的解说文案')
+
+    try {
+      const payload = await apiPost('/api/learn/analyze-video-url', { url })
+      addRecord(payload.record)
+      setStatus(`已提取 ${payload.video?.source || '视频字幕'}，并保存到学习库`)
+      setGlobalStatus('视频解说文案已保存到学习库')
+    } catch (error) {
+      setStatus(error.message)
+      setGlobalStatus(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="grid learnGrid">
       <section className="panel span2">
-        <PanelTitle icon={Link} title="网页视频读取" action="批量采集" />
-        <div className="inputRow">
-          <input value="https://video.example.com/hot/story-9281" readOnly />
-          <button className="primary"><Search size={16} />读取</button>
+        <PanelTitle icon={Link} title="爆款来源输入" action={status} />
+        <div className="modeTabs">
+          <button className={mode === 'video' ? 'active' : ''} onClick={() => setMode('video')}>视频解说提取</button>
+          <button className={mode === 'text' ? 'active' : ''} onClick={() => setMode('text')}>粘贴文案</button>
+          <button className={mode === 'url' ? 'active' : ''} onClick={() => setMode('url')}>网页链接分析</button>
         </div>
-        <div className="videoPreview">
-          <div className="playDisc"><Play fill="currentColor" size={28} /></div>
-          <div>
-            <strong>{selectedVideo.title}</strong>
-            <span>{selectedVideo.platform} · 热度 {selectedVideo.heat} · 02:47</span>
+
+        {mode === 'text' ? (
+          <div className="learnForm">
+            <div className="inputRow">
+              <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="样本标题" />
+              <input value={platform} onChange={(event) => setPlatform(event.target.value)} placeholder="平台" />
+            </div>
+            <textarea value={scriptText} onChange={(event) => setScriptText(event.target.value)} />
+            <button className="primary full" disabled={isLoading} onClick={analyzeText}>
+              <Sparkles size={16} />分析并学习
+            </button>
           </div>
-        </div>
+        ) : mode === 'url' ? (
+          <div className="learnForm">
+            <div className="inputRow">
+              <input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="粘贴 B站、抖音或普通网页链接" />
+              <button className="primary" disabled={isLoading} onClick={analyzeUrl}>
+                <Search size={16} />读取并分析
+              </button>
+            </div>
+            <p className="hint">网页链接只读取公开可见文字。如果平台拦截或内容太少，就改用粘贴文案，最稳。</p>
+          </div>
+        ) : (
+          <div className="learnForm">
+            <div className="inputRow">
+              <input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="粘贴 B站或抖音视频链接" />
+              <button className="primary" disabled={isLoading} onClick={analyzeVideoUrl}>
+                <Captions size={16} />提取并分析
+              </button>
+            </div>
+            <p className="hint">支持识别 B站和抖音链接。优先读取公开字幕、口播文本或视频文案；如果平台没有公开这些内容，就需要后续接入语音转文字。</p>
+          </div>
+        )}
       </section>
 
       <section className="panel">
-        <PanelTitle icon={BadgeCheck} title="热门爆款样本" action="热度排序" />
+        <PanelTitle icon={BadgeCheck} title="已学习样本" action={`${records.length} 条`} />
         <div className="sampleList">
-          {hotVideos.map((video) => (
+          {records.length === 0 && <p className="emptyState">学习库还是空的，先学习一条爆款文案。</p>}
+          {records.map((record) => (
             <button
-              key={video.title}
-              className={`sample ${selectedVideo.title === video.title ? 'selected' : ''}`}
-              onClick={() => setSelectedVideo(video)}
+              key={record.id}
+              className={`sample ${activeRecord?.id === record.id ? 'selected' : ''}`}
+              onClick={() => setActiveRecord(record)}
             >
-              <strong>{video.title}</strong>
-              <span>{video.platform} · {video.heat}</span>
-              <small>{video.hook}</small>
+              <strong>{record.sourceTitle}</strong>
+              <span>{record.platform} · 评分 {record.score}</span>
+              <small>{record.hook}</small>
             </button>
           ))}
         </div>
       </section>
 
       <section className="panel span2">
-        <PanelTitle icon={Subtitles} title="文案提取与结构拆解" action={learnState} />
-        <div className="scriptExtract">
-          {referenceScripts.map((line, index) => (
-            <div className="extractLine" key={line}>
-              <span>0{index + 1}</span>
-              <p>{line}</p>
-              <em>{['钩子', '冲突', '反转'][index]}</em>
-            </div>
-          ))}
-        </div>
+        <PanelTitle icon={Subtitles} title="文案提取与结构拆解" action={activeRecord?.modelStatus || '等待学习'} />
+        {activeRecord ? <AnalysisResult record={activeRecord} /> : <PreviewEmpty />}
       </section>
 
       <section className="panel">
-        <PanelTitle icon={BrainCircuit} title="GPT 自学习状态" action="结构记忆" />
+        <PanelTitle icon={BrainCircuit} title="可模仿写法" action="结构记忆" />
         <div className="learningMeter">
-          <strong>{learnState}</strong>
-          <span>钩子密度、情绪曲线、反转节奏、结尾互动</span>
-          <button className="primary full" onClick={runLearning}>
-            <Sparkles size={16} />提取并学习
-          </button>
+          <strong>{activeRecord ? '已学会一条套路' : '待学习'}</strong>
+          <span>{activeRecord?.reusableTemplate || '这里会显示模型总结出的爆款写法模板。'}</span>
+          <div className="chipRow">
+            {(activeRecord?.tags || ['悬念开头', '冲突推进', '反转节奏']).map((tag) => (
+              <span key={tag}>{tag}</span>
+            ))}
+          </div>
         </div>
       </section>
     </div>
   )
 }
 
-function WritingView({ draftState, generateDraft }) {
-  const [videoState, setVideoState] = useState('等待导入或检索')
-  const [sourceMode, setSourceMode] = useState('需求识别')
+function WritingView({ records, setGlobalStatus }) {
+  const [requirement, setRequirement] = useState('请根据悬疑电影素材，生成 90 秒口播解说文案。开头要有强悬念，中段持续反转，结尾留下评论讨论点。')
+  const [draftState, setDraftState] = useState('未生成')
+  const [result, setResult] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const importSourceVideo = () => {
-    setSourceMode('原视频 01')
-    setVideoState('已导入原视频，可浏览生成解说')
-  }
+  const generateDraft = async () => {
+    setIsLoading(true)
+    setDraftState('正在参考学习库生成新文案')
+    setGlobalStatus('正在参考学习库生成新文案')
 
-  const searchSourceVideo = () => {
-    setSourceMode('联网检索片名')
-    setVideoState('已找到相关片源/剧情资料')
+    try {
+      const payload = await apiPost('/api/write/generate', { requirement })
+      setResult(payload)
+      setDraftState('已参考学习库生成新文案')
+      setGlobalStatus('已参考学习库生成新文案')
+    } catch (error) {
+      setDraftState(error.message)
+      setGlobalStatus(error.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="grid writeGrid">
       <section className="panel">
         <PanelTitle icon={MousePointer2} title="创作需求" action="爆款模型" />
-        <textarea
-          readOnly
-          value={'请根据悬疑电影素材，生成 90 秒口播解说文案。开头要有强悬念，中段持续反转，结尾留下评论讨论点。'}
-        />
+        <textarea value={requirement} onChange={(event) => setRequirement(event.target.value)} />
         <div className="chipRow">
           <span>90 秒</span>
           <span>悬疑反转</span>
           <span>强开头</span>
           <span>适合 SRT</span>
         </div>
-      </section>
-
-      <section className="panel sourcePanel">
-        <PanelTitle icon={FolderUp} title="原视频参考" action={videoState} />
-        <div className="sourcePreview">
-          <div className="playDisc compact"><Play fill="currentColor" size={20} /></div>
-          <div>
-            <strong>悬疑电影素材 · 样片预览</strong>
-            <span>1080P · 23.98fps · 01:37:42</span>
-          </div>
-        </div>
-        <div className="sourceActions">
-          <button onClick={importSourceVideo}><FolderUp size={16} />导入原视频</button>
-          <button onClick={searchSourceVideo}><Search size={16} />联网搜索片源</button>
-        </div>
-        <div className="sourceMeta">
-          <span>识别片名：迷雾回廊</span>
-          <span>当前来源：{sourceMode}</span>
-          <span>关键节点：失踪、回溯、身份反转</span>
-        </div>
-        <div className="searchResults">
-          {['剧情梗概已匹配', '人物关系已抽取', '高能片段 7 处'].map((item) => (
-            <em key={item}>{item}</em>
-          ))}
-        </div>
+        <button className="primary full actionButton" disabled={isLoading} onClick={generateDraft}>
+          <Send size={16} />生成爆款文案
+        </button>
       </section>
 
       <section className="panel">
-        <PanelTitle icon={BrainCircuit} title="相似文案库" action="3 条已选" />
+        <PanelTitle icon={BrainCircuit} title="学习库参考" action={`${records.length} 条可用`} />
         <div className="referenceBox">
-          {referenceScripts.map((line, index) => (
-            <label key={line}>
+          {records.length === 0 && <p className="emptyState">学习库为空，请先去第一模块学习样本。</p>}
+          {records.slice(0, 5).map((record) => (
+            <label key={record.id}>
               <input type="checkbox" defaultChecked />
-              <span>参考 {index + 1}</span>
-              <p>{line}</p>
+              <span>{record.sourceTitle}</span>
+              <p>{record.reusableTemplate}</p>
             </label>
           ))}
         </div>
       </section>
 
-      <section className="panel span2 tall">
-        <PanelTitle
-          icon={Wand2}
-          title="生成文案"
-          action={draftState === '已生成，可加入字幕草稿' ? '基于创作需求 + 原视频参考' : draftState}
-        />
-        <div className="sourceTags">
-          <span>参考原视频 01</span>
-          <span>联网检索片名</span>
-          <span>剧情节点已匹配</span>
+      <section className="panel sourcePanel">
+        <PanelTitle icon={Sparkles} title="生成状态" action={draftState} />
+        <div className="sourcePreview">
+          <div className="playDisc compact"><Play fill="currentColor" size={20} /></div>
+          <div>
+            <strong>{result?.title || '等待生成新文案'}</strong>
+            <span>{result?.modelStatus || '会自动借鉴第一模块学到的爆款逻辑'}</span>
+          </div>
         </div>
-        <div className="generated">
-          {generatedParagraphs.map((line, index) => (
-            <p key={line}><b>{String(index + 1).padStart(2, '0')}</b>{line}</p>
+        <div className="sourceMeta">
+          {(result?.referenceSummary || ['先学习热门文案，再让 AI 借鉴结构生成。']).map((item) => (
+            <span key={item}>{item}</span>
           ))}
         </div>
-        <div className="buttonRow">
-          <button className="primary" onClick={generateDraft}><Send size={16} />生成爆款文案</button>
-          <button><Captions size={16} />加入字幕草稿</button>
+      </section>
+
+      <section className="panel span2 tall">
+        <PanelTitle icon={Wand2} title="生成文案" action={result ? '可继续送入字幕草稿' : draftState} />
+        <div className="generated">
+          {(result?.paragraphs || []).map((line, index) => (
+            <p key={`${line}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b>{line}</p>
+          ))}
+          {!result && <p className="emptyState">生成后，这里会显示完整分段文案。</p>}
         </div>
       </section>
 
       <section className="panel tall">
-        <PanelTitle icon={Captions} title="SRT 草稿" action="可导入第四模块" />
+        <PanelTitle icon={Captions} title="SRT 草稿" action="可导入剪辑台" />
         <div className="srtPreview">
-          <code>1<br />00:00:00,000 --&gt; 00:00:05,400<br />如果你只看了开头...</code>
-          <code>2<br />00:00:05,400 --&gt; 00:00:12,000<br />真正的反转从这里开始...</code>
-          <button className="full"><Plus size={16} />保存为字幕草稿</button>
+          <code>{result?.srtDraft || '生成后，这里会出现字幕时间轴草稿。'}</code>
         </div>
       </section>
+    </div>
+  )
+}
+
+function AnalysisResult({ record }) {
+  const rows = [
+    ['钩子', record.hook],
+    ['冲突', record.conflict],
+    ['反转', record.reversal],
+    ['互动', record.commentTrigger],
+  ]
+
+  return (
+    <div className="scriptExtract">
+      {rows.map(([label, detail], index) => (
+        <div className="extractLine" key={label}>
+          <span>{String(index + 1).padStart(2, '0')}</span>
+          <p>{detail || '等待模型补充'}</p>
+          <em>{label}</em>
+        </div>
+      ))}
+      <div className="analysisCard">
+        <strong>情绪推进</strong>
+        <p>{record.emotionCurve}</p>
+      </div>
+      <div className="analysisCard">
+        <strong>画面/口播建议</strong>
+        <p>{record.visualVoiceoverTips}</p>
+      </div>
+    </div>
+  )
+}
+
+function PreviewEmpty() {
+  return (
+    <div className="scriptExtract">
+      {['钩子', '冲突', '反转', '互动'].map((label, index) => (
+        <div className="extractLine" key={label}>
+          <span>{String(index + 1).padStart(2, '0')}</span>
+          <p>学习后会在这里显示模型拆出来的爆款逻辑。</p>
+          <em>{label}</em>
+        </div>
+      ))}
     </div>
   )
 }
@@ -424,250 +476,15 @@ function MatchView() {
 }
 
 function EditView() {
-  const importInputRef = useRef(null)
-  const [importedAssets, setImportedAssets] = useState([])
-
-  const importSummary = importedAssets.length
-    ? `已生成 ${new Set(importedAssets.map((asset) => asset.kind)).size} 类轨道`
-    : '等待导入视频、音频或 SRT'
-
-  const timelineTracks = useMemo(() => {
-    return ['video', 'audio', 'subtitle']
-      .map((kind) => ({
-        kind,
-        ...importKindMeta[kind],
-        assets: importedAssets.filter((asset) => asset.kind === kind),
-      }))
-      .filter((track) => track.assets.length > 0)
-  }, [importedAssets])
-
-  const addImportedFiles = (files) => {
-    const nextAssets = Array.from(files).map((file, index) => {
-      const kind = detectImportKind(file)
-      return {
-        id: `${file.name}-${file.size}-${Date.now()}-${index}`,
-        name: file.name,
-        kind,
-        size: formatFileSize(file.size),
-      }
-    })
-
-    if (nextAssets.length) {
-      setImportedAssets((current) => [...nextAssets, ...current])
-    }
-  }
-
   return (
-    <div className="capcutBench">
-      <section className="capcutTop">
-        <aside className="mediaPanel">
-          <div className="mediaTabs">
-            <button className="active"><Film size={18} />媒体</button>
-            <button><AudioLines size={18} />音频</button>
-            <button><Captions size={18} />文本</button>
-          </div>
-          <div className="mediaBody">
-            <div className="mediaLibrary">
-              <div className="mediaSearch">
-                <Search size={15} />
-                <span>搜索文件名称、画面元素、台词</span>
-              </div>
-              <div className="mediaToolbar">
-                <button onClick={() => importInputRef.current?.click()}><Plus size={15} />导入</button>
-                <input
-                  ref={importInputRef}
-                  className="hiddenFileInput"
-                  type="file"
-                  multiple
-                  accept="video/*,audio/*,.srt"
-                  onChange={(event) => {
-                    addImportedFiles(event.target.files)
-                    event.target.value = ''
-                  }}
-                />
-                <button onClick={() => addImportedFiles(demoImportFiles)}>示例导入</button>
-                <button>排序</button>
-                <button>全部</button>
-              </div>
-              <span className="libraryLabel">{importSummary}</span>
-              {importedAssets.length > 0 && (
-                <div className="importStatus" aria-label="导入结果">
-                  {['video', 'audio', 'subtitle'].map((kind) => {
-                    const meta = importKindMeta[kind]
-                    const Icon = meta.icon
-                    const count = importedAssets.filter((asset) => asset.kind === kind).length
-
-                    return (
-                      <span key={kind} style={{ '--status-color': meta.color }}>
-                        <Icon size={13} />{meta.label} {count}
-                      </span>
-                    )
-                  })}
-                </div>
-              )}
-              <div className="clipGrid">
-                {importedAssets.map((asset) => {
-                  const meta = importKindMeta[asset.kind]
-                  return (
-                    <div className="clipCard" key={asset.id}>
-                      <div className={`clipThumb assetThumb ${asset.kind}`} style={{ '--clip-tone': meta.color }}>
-                        <span>{meta.label}</span>
-                        <em>{asset.size}</em>
-                      </div>
-                      <strong>{asset.name}</strong>
-                    </div>
-                  )
-                })}
-                {mediaClips.map((clip, index) => (
-                  <div className="clipCard" key={clip.name}>
-                    <div className="clipThumb" style={{ '--clip-tone': clip.tone }}>
-                      <span>已添加</span>
-                      <em>{clip.duration}</em>
-                    </div>
-                    <strong>{String(index + 1).padStart(2, '0')}_{clip.name}</strong>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <section className="playerPanel">
-          <div className="capcutPanelHeader">
-            <strong>播放器</strong>
-            <button><Settings2 size={16} /></button>
-          </div>
-          <div className="capcutViewer">
-            <div className="viewerFrame">
-              <div className="sceneLayer sceneBack"></div>
-              <div className="sceneLayer sceneSubject"></div>
-              <span className="viewerCaption">真正的反转，从这一秒才开始</span>
-            </div>
-          </div>
-          <div className="playerControls">
-            <span><b>00:00:00:00</b> / 00:04:31:00</span>
-            <button><Play fill="currentColor" size={18} /></button>
-            <div>
-              <button>比例</button>
-              <button>全屏</button>
-            </div>
-          </div>
-        </section>
-
-        <aside className="adjustPanel">
-          <div className="capcutPanelHeader">
-            <strong>画面与字幕</strong>
-          </div>
-          <div className="adjustBody">
-            <div className="adjustGroup">
-              <div className="adjustTitle">
-                <span>视频画面</span>
-                <em>已选主视频</em>
-              </div>
-              {[
-                ['位置 X', '0'],
-                ['位置 Y', '-12'],
-                ['缩放', '112%'],
-                ['旋转', '0°'],
-              ].map(([label, value]) => (
-                <label className="adjustRow" key={label}>
-                  <span>{label}</span>
-                  <input type="range" min="0" max="100" defaultValue={label === '缩放' ? 62 : 50} />
-                  <strong>{value}</strong>
-                </label>
-              ))}
-            </div>
-
-            <div className="adjustGroup">
-              <div className="adjustTitle">
-                <span>字幕样式</span>
-                <em>SRT 字幕层</em>
-              </div>
-              {[
-                ['字体大小', '42px'],
-                ['字幕 X', '0'],
-                ['字幕 Y', '78%'],
-                ['描边强度', '6'],
-              ].map(([label, value]) => (
-                <label className="adjustRow" key={label}>
-                  <span>{label}</span>
-                  <input type="range" min="0" max="100" defaultValue={label === '字幕 Y' ? 78 : 48} />
-                  <strong>{value}</strong>
-                </label>
-              ))}
-              <div className="fontControls">
-                <button className="active">粗体</button>
-                <button>阴影</button>
-                <button>居中</button>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </section>
-
-      <section className="capcutTimeline">
-        <div className="timelineToolBar">
+    <div className="grid editGrid">
+      <section className="panel span3 tall">
+        <PanelTitle icon={Clapperboard} title="剪辑工作台" action="演示原型" />
+        <div className="videoPreview large">
+          <div className="playDisc"><Play fill="currentColor" size={30} /></div>
           <div>
-            {['选择', '撤销', '重做', '分割', '删除', '保护', '截图'].map((tool) => (
-              <button key={tool}>{tool}</button>
-            ))}
-          </div>
-          <div>
-            {['录音', '吸附', '联动', '缩放 -', '缩放 +'].map((tool) => (
-              <button key={tool}>{tool}</button>
-            ))}
-          </div>
-        </div>
-        <div className="timeRuler">
-          {['00:00', '01:00', '02:00', '03:00', '04:00', '05:00'].map((time) => (
-            <span key={time}>{time}</span>
-          ))}
-        </div>
-        <div className="timelineStage">
-          <div className="playhead">
-            <span></span>
-          </div>
-          <div className="trackLabels">
-            <span>封面</span>
-            <span>主视频</span>
-            {timelineTracks.map((track) => (
-              <span key={track.kind}>{track.label}</span>
-            ))}
-          </div>
-          <div className="capcutTracks">
-            <div className="coverTrack">
-              <strong>封面</strong>
-            </div>
-            <div className="mainClipTrack">
-              {editTimelineClips.map((clip, index) => (
-                <div
-                  className="timelineClip"
-                  key={clip}
-                  style={{ '--clip-index': index }}
-                >
-                  <span>{clip}</span>
-                  <em></em>
-                </div>
-              ))}
-            </div>
-            {timelineTracks.map((track) => (
-              <div className={`generatedTrack ${track.rowClass}`} key={track.kind}>
-                {track.assets.map((asset, index) => (
-                  <div
-                    className="generatedClip"
-                    key={asset.id}
-                    style={{
-                      '--track-color': track.color,
-                      width: `${Math.min(280, 118 + asset.name.length * 5)}px`,
-                      marginLeft: index === 0 ? '0' : '8px',
-                    }}
-                  >
-                    <span>{asset.name}</span>
-                    <em>{track.label}</em>
-                  </div>
-                ))}
-              </div>
-            ))}
+            <strong>真正的反转，从这一秒才开始</strong>
+            <span>这里保留剪映式工作台入口，后续可接入素材和字幕轨道。</span>
           </div>
         </div>
       </section>
@@ -685,6 +502,13 @@ function PanelTitle({ icon: Icon, title, action }) {
 }
 
 function Timeline() {
+  const trackData = [
+    { name: '原视频轨', color: '#53c7ff', blocks: ['导入片段 01', '导入片段 02', '转场补帧'] },
+    { name: 'A-roll 解说轨', color: '#ffcc66', blocks: ['开场钩子', '剧情推进', '结尾金句'] },
+    { name: 'B-roll 衔接轨', color: '#7cf29a', blocks: ['人物特写', '环境空镜', '高能动作', '细节回放'] },
+    { name: '字幕轨', color: '#f48cff', blocks: ['SRT 01', 'SRT 02', '强调字幕'] },
+  ]
+
   return (
     <section className="timeline">
       <div className="timelineHeader">
