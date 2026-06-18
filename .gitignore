@@ -4,6 +4,11 @@ node_modules/
 # Build output
 dist/
 
+# Local media processing
+data/uploads/
+data/tmp/
+data/tools/
+
 # Vite / tool caches
 .vite/
 .cache/

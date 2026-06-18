@@ -28,3 +28,13 @@ export async function saveRecord(record) {
   await writeFile(libraryPath, `${JSON.stringify(nextRecords, null, 2)}\n`, 'utf8')
   return record
 }
+
+export async function deleteRecord(recordId) {
+  const records = await readRecords()
+  const nextRecords = records.filter((record) => record.id !== recordId)
+  await writeFile(libraryPath, `${JSON.stringify(nextRecords, null, 2)}\n`, 'utf8')
+  return {
+    deleted: nextRecords.length !== records.length,
+    records: nextRecords,
+  }
+}

@@ -54,7 +54,7 @@ async function resolveUrl(url) {
 async function readBilibiliTranscript(parsed) {
   const bvid = extractBvid(parsed.href)
   if (!bvid) {
-    const error = new Error('没有从这个 B站链接里识别到 BV 号，请换成完整的视频页链接。')
+    const error = new Error('没有从这个 B站 链接里识别到 BV 号，请换成完整的视频页链接。')
     error.status = 400
     throw error
   }
@@ -63,7 +63,7 @@ async function readBilibiliTranscript(parsed) {
   const pages = view?.data?.pages || []
   const cid = pages[0]?.cid
   if (!cid) {
-    const error = new Error('没有读取到这个 B站视频的分 P 信息，暂时无法提取字幕。')
+    const error = new Error('没有读取到这个 B站 视频的分 P 信息，暂时无法提取字幕。')
     error.status = 422
     throw error
   }
@@ -74,7 +74,7 @@ async function readBilibiliTranscript(parsed) {
 
   if (!subtitle?.subtitle_url) {
     const error = new Error(
-      '这个 B站视频没有公开字幕，所以暂时提取不到内部解说文案。可以换一个带字幕的视频，或先把文案粘贴进来分析。',
+      '这个 B站 视频没有公开字幕，所以暂时提取不到内部解说文案。可以换一个带字幕的视频，或先把文案粘贴进来分析。',
     )
     error.status = 422
     throw error
